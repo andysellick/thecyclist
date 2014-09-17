@@ -55,14 +55,14 @@ function roaddata(canvas){
     //e.g. [2,0,2,1] is a two lane road going north and south and a single lane going west
     return([
         {
-            'type': 'Dual lane, straight on',
-            'img': roadimages[5],
+            'type': 'Dual lane, straight on', //currently unused
+            'img': roadimages[5], //fixme should be determined programmatically
             'width': canvas.width,
             'height': canvas.height,
-            'vehcount': 8,
-            'routes': [2,2,2,2],
-            'junction': 0, //if 1, don't put any traffic in the centre zone
-            'priority': 'ns', //determines which of the directions has priority and therefore can have traffic in the centre (assuming junction is 0)
+            'vehcount': 20,
+            'routes': [2,2,2,2], //determines which directions have traffic allowed in them, n,e,s,w
+            'junction': 0, //fixme needs implementing
+            'priority': [1,0,1,0], //determines which of the directions has priority and therefore can have traffic in the centre, assuming no junction, n,e,s,w
         }
     ]);
 }
@@ -73,7 +73,7 @@ function vehicledata(canvas){
 
     return([
         {
-            'type': '',
+            'type': 'car',
             'img': vehimages[0],
             'width': vwidth,
             'height': vheight,
