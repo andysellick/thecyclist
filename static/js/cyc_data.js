@@ -59,17 +59,17 @@ function roaddata(canvas){
             'img': roadimages[5], //fixme should be determined programmatically
             'width': canvas.width,
             'height': canvas.height,
-            'vehcount': 20,
-            'routes': [2,2,2,2], //determines which directions have traffic allowed in them, n,e,s,w
-            'junction': 0, //fixme needs implementing
+            'vehcount': 12,
+            'routes': [1,1,1,1], //determines which directions have traffic allowed in them, n,e,s,w
+            'junction': 0, //fixme needs implementing. Possible values: 1 - traffic lights, 2 - traffic lights with cycle boxes
             'priority': [1,0,1,0], //determines which of the directions has priority and therefore can have traffic in the centre, assuming no junction, n,e,s,w
         }
     ]);
 }
 
 function vehicledata(canvas){
-    var vwidth = canvas.width / 8;
-    var vheight = canvas.width / 8;
+    var vwidth = canvas.width / 10;
+    var vheight = canvas.width / 10;
 
     return([
         {
