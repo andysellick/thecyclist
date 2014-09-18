@@ -6,7 +6,7 @@ var pedimgdir = 'peds/';
 var pedimages = ['ped1.png'];
 
 var vehimgdir = 'vehs/';
-var vehimages = ['veh1.png'];
+var vehimages = ['veh_n.png','veh_e.png','veh_s.png','veh_w.png'];
 
 //preload all images
 var loaders = [];
@@ -51,7 +51,7 @@ function roaddata(canvas){
     //route-x attributes determine what kind of road goes in that direction
     //e.g. route-n 2 means a dual lane road goes north
     
-    //routes shows the availability of directions of travel for nesw 
+    //routes shows the availability of directions of travel for nesw
     //e.g. [2,0,2,1] is a two lane road going north and south and a single lane going west
     return([
         {
@@ -59,10 +59,10 @@ function roaddata(canvas){
             'img': roadimages[5], //fixme should be determined programmatically
             'width': canvas.width,
             'height': canvas.height,
-            'vehcount': 12,
+            'vehcount': 30,
             'routes': [1,1,1,1], //determines which directions have traffic allowed in them, n,e,s,w
             'junction': 0, //fixme needs implementing. Possible values: 1 - traffic lights, 2 - traffic lights with cycle boxes
-            'priority': [1,0,1,0], //determines which of the directions has priority and therefore can have traffic in the centre, assuming no junction, n,e,s,w
+            'priority': [0,1,0,1], //determines which of the directions has priority and therefore can have traffic in the centre, assuming no junction, n,e,s,w. THIS REQUIRES COMMON SENSE to configure
         }
     ]);
 }

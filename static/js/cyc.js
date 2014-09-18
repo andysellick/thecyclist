@@ -39,8 +39,8 @@ function createLevel(passed){
     this.spriteheight = 400;
     this.actorwidth = passed['width'];
     this.actorheight = passed['height'];
-    this.xpos = 0;
-    this.ypos = 0;
+    this.xpos = canvas.width / 2;
+    this.ypos = canvas.height / 2;
 
     this.vehcount = passed['vehcount'];
     this.routes = passed['routes'];
@@ -153,29 +153,29 @@ function createVehicle(passed){
             switch(this.direction){
                 case 0: //north
                     this.ypos -= this.moveby;
-                    if(this.ypos < (0 - this.actorheight)){ //if the vehicle has gone off north, add to southern stack
-                        this.ypos = canvas.height;
+                    if(this.ypos - (this.actorheight / 2) < (0 - this.actorheight)){ //if the vehicle has gone off north, add to southern stack
+                        this.ypos = canvas.height + this.actorheight;
                         addtostack = 1;
                     }
                     break;
                 case 1: //east
                     this.xpos += this.moveby;
-                    if(this.xpos > canvas.width){
-                        this.xpos = 0 - this.actorwidth;
+                    if(this.xpos - (this.actorwidth / 2) > canvas.width){
+                        this.xpos = 0 - (this.actorwidth * 2);
                         addtostack = 1;
                     }
                     break;
                 case 2: //south
                     this.ypos += this.moveby;
-                    if(this.ypos > canvas.height){
-                        this.ypos = 0 - this.actorheight;
+                    if(this.ypos - (this.actorheight / 2) > canvas.height){
+                        this.ypos = 0 - (this.actorheight * 2);
                         addtostack = 1;
                     }
                     break;
                 case 3: //west
                     this.xpos -= this.moveby;
-                    if(this.xpos < (0 - this.actorwidth)){
-                        this.xpos = canvas.width;
+                    if(this.xpos + (this.actorwidth / 2) < (0 - this.actorwidth)){
+                        this.xpos = canvas.width + this.actorwidth;
                         addtostack = 1;
                     }
                     break;
@@ -304,8 +304,10 @@ var thecyclist = {
             game = 0;
         },
         //draw some object on the canvas
-        drawOnCanvas: function(object){
-            canvas_cxt.drawImage(object.sprite, object.spritex, object.spritey, object.spritewidth, object.spriteheight, object.xpos, object.ypos, object.actorwidth, object.actorheight);
+        drawOnCanvas: function(obj){
+            var xpos = obj.xpos - (obj.actorwidth / 2);
+            var ypos = obj.ypos - (obj.actorheight / 2);
+            canvas_cxt.drawImage(obj.sprite, obj.spritex, obj.spritey, obj.spritewidth, obj.spriteheight, xpos, ypos, obj.actorwidth, obj.actorheight);
         },
         //completely clear the canvas
         clearCanvas: function(canvas, cxt){
@@ -329,23 +331,15 @@ var thecyclist = {
         setupLevel: function(){
             var data = roaddata(canvas);
             level = new createLevel(data[0]);
-
         },
         //initialise data for the vehicles
         setupVehicles: function(){
             var data = vehicledata(canvas);
             var vehtmp;
-            var vehid = 1
-            var spacing = 10;
-            var xpos_north = canvas.width / 2.8; //left side of the road
-            var xpos_south = canvas.width / 1.9; //right side of the road
-            var ypos_east = xpos_north; //assuming a square canvas
-            var ypos_west = xpos_south; //assuming a square canvas, otherwise canvas.height / 1.9;
+            var vehid = 1;
+            var spacing = 30;
 
-            //used to place vehicles without overlapping them
-            var directors = [0,0,canvas.height,canvas.width];
-            
-            var berandom = 1;
+            var berandom = 0;
             var vehiclecount,routecount = 0;
             vehiclecounts = [0,0,0,0];
             for(i = 0; i < level.routes.length; i++){ //count the number of routes
@@ -376,113 +370,97 @@ var thecyclist = {
                     }
                 }
             }
-            console.log(vehiclecounts);
 
-            for(i = 0; i < vehiclecounts.length; i++){
-                for(y = 0; y < vehiclecounts[i]; y++){
-                    vehtmp = new createVehicle(data[0]);
+            var boundary_n = canvas.height / 6;
+            var boundary_e = canvas.width / 6;
+            var boundary_s = canvas.height / 6;
+            var boundary_w = canvas.width / 6;
+            var midpoint_ns = canvas.height / 2;
+            var midpoint_ew = canvas.width / 2;
+            var midpoints = [midpoint_ns, midpoint_ew, midpoint_ns, midpoint_ew]; //midpoints in a nesw accessible structure
+
+            var xpos_north = canvas.width / 2.4; //left side of the road
+            var xpos_south = canvas.width / 1.7; //right side of the road
+            var ypos_east = canvas.height / 2.4; //left side of the road
+            var ypos_west = canvas.height / 1.7; //right side of the road
+
+            //used to place vehicles without overlapping them
+            //essentially here we're defining a square ring around the screen within which vehicles can be placed depending on the level configuration
+            //if the level has a junction in the middle fixme
+            var directors_areas = [
+                [boundary_n, boundary_n * 1.5, canvas.height - (boundary_n * 1.5), canvas.height - boundary_n], //north
+                [boundary_e, boundary_e * 1.5, canvas.height - (boundary_e * 1.5), canvas.width - boundary_e], //east
+                [boundary_s, boundary_s * 1.5, canvas.height - (boundary_s * 1.5), canvas.height - boundary_s], //south
+                [boundary_w, boundary_w * 1.5, canvas.height - (boundary_w * 1.5), canvas.width - boundary_w], //west
+            ];
+            console.log(directors_areas);
+
+            var directors = [boundary_n,boundary_e,boundary_s,boundary_w]; //these are the positions we start placing vehicles from, then increment
+
+            //remove 'gaps' as necessary, based on the level priorities. Note that to configure an empty junction we would set all priorities to zero
+            for(i = 0; i < level.priority.length; i++){
+                if(level.priority[i]){
+                    directors_areas[i][1] = midpoints[i];
+                    directors_areas[i][2] = midpoints[i];
+                }
+            }
+
+            //now create and position the vehicles
+            for(i = 0; i < vehiclecounts.length; i++){ //i is the direction of the vehicle, n,e,s,w
+                for(y = 0; y < vehiclecounts[i]; y++){ //y is the number of the vehicles for each direction
+                    vehtmp = new createVehicle(data[0]); //fixme will have different vehicles eventually
                     vehtmp.id = vehid++;
                     vehtmp.direction = i;
-    
-                    //now pre-calculate the collision detection zone for this vehicle. It should be slightly wider than the vehicle, half the length, and start somewhere near the
-                    //front of the vehicle. This will be used to check if anything else is in this space, and react accordingly
-                    /* fixme - not sure this will work. We'll need to constantly update these numbers
-                    switch(vehtmp.direction){
-                        case 0: //north
-                            vehtmp.collisionZoneX = 0;
-                            vehtmp.collisionZoneY = 0;
-                            vehtmp.collisionZoneW = 0;
-                            vehtmp.collisionZoneH = 0;
-                            break;
-                        case 1:
-                            break;
-                        case 2:
-                            break;
-                        case 3:
-                            break;
-                    }
-                    */
-    
+                    vehtmp.sprite = vehimages[i];
+                    var tmppos;
+
+                    //fixme argh we're redefining this in every loop
+                    //width/height, second width/height, spacing, width/height for spacing,
+                    var directionvariables = [
+                        [spacing, vehtmp.actorheight, canvas.height + vehtmp.actorheight], //n
+                        [spacing, vehtmp.actorwidth,  0 - (vehtmp.actorwidth * 2)], //e
+                        [spacing, vehtmp.actorheight, 0 - (vehtmp.actorheight * 2)], //s
+                        [spacing, vehtmp.actorwidth,  canvas.width + (vehtmp.actorwidth * 2)] //w
+                    ];
+
                     //select a position within the height or width of the page (depending on direction) as the start position
                     //set the other value of width or height based on the direction and side of the road it should be on
-                    //fixme this is all fairly similar, could be condensed?
-                    switch(vehtmp.direction){
-                        case 0: //heading north
-                            vehtmp.xpos = xpos_north;
-                            if(directors[vehtmp.direction] < canvas.height){
-                                if(!level.priority[vehtmp.direction]){ //if this direction has been set as a priority, we can have traffic anywhere in the lane, if not, leave a gap in the middle
-                                    if(directors[vehtmp.direction] > canvas.height / 4 && directors[vehtmp.direction] < (canvas.height / 4) * 3){
-                                        directors[vehtmp.direction] = (canvas.height / 4) * 3 + 1;
-                                    }
-                                }
-                                vehtmp.ypos = directors[vehtmp.direction] + Math.floor(getRandomArbitrary(vehtmp.actorheight,vehtmp.actorheight + spacing));
-                                directors[vehtmp.direction] = vehtmp.ypos + vehtmp.actorheight;
-                            }
-                            else {
-                                vehtmp.ypos = canvas.height;
-                                vehtmp.active = 0;
-                                level.directionstacks[vehtmp.direction].push(vehtmp);
-                            }
+                    if(directors[vehtmp.direction] < directors_areas[i][3]){
+                        if(directors[vehtmp.direction] > directors_areas[i][1] && directors[vehtmp.direction] < directors_areas[i][2]){
+                            directors[vehtmp.direction] = directors_areas[i][2];
+                        }
+                        //tmppos = directors[vehtmp.direction] + directionvariables[i][0]; //Math.floor(getRandomArbitrary(directionvariables[i][2],directionvariables[i][2]));
+                        tmppos = directors[vehtmp.direction] + Math.floor(getRandomArbitrary(directionvariables[i][0],directionvariables[i][0] * 1.5));
+                        directors[vehtmp.direction] = tmppos + directionvariables[i][1];
+                    }
+                    else {
+                        tmppos = directionvariables[i][2];
+                        vehtmp.active = 0;
+                        level.directionstacks[vehtmp.direction].push(vehtmp);
+                    }
+                    switch(i){
+                        case 0: //north
+                            vehtmp.xpos = xpos_north + getRandomArbitrary(0 - vehtmp.actorwidth / 14, vehtmp.actorwidth / 14);
+                            vehtmp.ypos = tmppos;
                             break;
-                        case 1: //heading east
-                            vehtmp.ypos = ypos_east;
-                            if(directors[vehtmp.direction] < canvas.width){
-                                if(!level.priority[vehtmp.direction]){ //if this direction has been set as a priority, we can have traffic anywhere in the lane, if not, leave a gap in the middle
-                                    if(directors[vehtmp.direction] + vehtmp.actorwidth > canvas.width / 4 && directors[vehtmp.direction] < (canvas.width / 4) * 3){
-                                        directors[vehtmp.direction] = (canvas.width / 4) * 3 + 1;
-                                    }
-                                }
-                                vehtmp.xpos = directors[vehtmp.direction] + Math.floor(getRandomArbitrary(vehtmp.actorwidth,vehtmp.actorwidth + spacing));
-                                directors[vehtmp.direction] = vehtmp.xpos + vehtmp.actorwidth;
-                            }
-                            else {
-                                vehtmp.xpos = 0 - vehtmp.actorwidth;
-                                vehtmp.active = 0;
-                                level.directionstacks[vehtmp.direction].push(vehtmp);
-                            }
+                        case 1: //east
+                            vehtmp.xpos = tmppos;
+                            vehtmp.ypos = ypos_east + getRandomArbitrary(0 - vehtmp.actorheight / 14, vehtmp.actorheight / 14);
                             break;
-                        case 2: //heading south
-                            vehtmp.xpos = xpos_south;
-                            if(directors[vehtmp.direction] > 0){
-                                //console.log('ok ' + directors[vehtmp.direction]);
-                                if(!level.priority[vehtmp.direction]){ //if this direction has been set as a priority, we can have traffic anywhere in the lane, if not, leave a gap in the middle
-                                    if(directors[vehtmp.direction] > canvas.height / 4 && directors[vehtmp.direction] < (canvas.height / 4) * 3){
-                                        directors[vehtmp.direction] = (canvas.height / 4) + vehtmp.actorheight;
-                                    }
-                                }
-                                vehtmp.ypos = directors[vehtmp.direction] - Math.floor(getRandomArbitrary(vehtmp.actorheight,vehtmp.actorheight - spacing));
-                                directors[vehtmp.direction] = vehtmp.ypos - vehtmp.actorheight;
-                            }
-                            else {
-                                //console.log('adding to stack ' + directors[vehtmp.direction]);
-                                vehtmp.ypos = 0 - vehtmp.actorheight;
-                                vehtmp.active = 0;
-                                level.directionstacks[vehtmp.direction].push(vehtmp);
-                            }
+                        case 2: //south
+                            vehtmp.xpos = xpos_south + getRandomArbitrary(0 - vehtmp.actorwidth / 14, vehtmp.actorwidth / 14);
+                            vehtmp.ypos = tmppos;
                             break;
-                        case 3: //heading west
-                            vehtmp.ypos = ypos_west;
-                            if(directors[vehtmp.direction] > 0){
-                                if(!level.priority[vehtmp.direction]){ //if this direction has been set as a priority, we can have traffic anywhere in the lane, if not, leave a gap in the middle
-                                    if(directors[vehtmp.direction] > canvas.width / 4 && directors[vehtmp.direction] - vehtmp.actorwidth < (canvas.width / 4) * 3){
-                                        directors[vehtmp.direction] = (canvas.width / 4) - vehtmp.actorwidth;
-                                    }
-                                }
-                                vehtmp.xpos = directors[vehtmp.direction] - Math.floor(getRandomArbitrary(vehtmp.actorwidth,vehtmp.actorwidth - spacing));
-                                directors[vehtmp.direction] = vehtmp.xpos - vehtmp.actorwidth;
-                            }
-                            else {
-                                vehtmp.xpos = canvas.width;
-                                vehtmp.active = 0;
-                                level.directionstacks[vehtmp.direction].push(vehtmp); //push this vehicle onto the direction stack for this direction
-                            }
+                        case 3: //west
+                            vehtmp.xpos = tmppos;
+                            vehtmp.ypos = ypos_west + getRandomArbitrary(0 - vehtmp.actorheight / 14, vehtmp.actorheight / 14);
                             break;
                     }
                     allObjects.push(vehtmp);
                 }
             }
 
-            /* bit of debug stuff here
+            // bit of debug stuff here
             directioncount = [0,0,0,0];
             for(i = 0; i < allObjects.length; i++){
                 directioncount[allObjects[i].direction] += 1;
@@ -495,7 +473,7 @@ var thecyclist = {
             console.log(level.directionstacks[1].length + " cars in east stack");
             console.log(level.directionstacks[2].length + " cars in south stack");
             console.log(level.directionstacks[3].length + " cars in west stack");
-            */
+
 
         }
     },
