@@ -26,31 +26,35 @@ function createPlayer(){
     this.ypos;
 
     this.draw = function(){
-        thecyclist.general.drawOnCanvas(this);
+        thecyclist.general.drawObjectOnCanvas(this);
     };
 }
 
 //object for the level
 function createLevel(passed){
-    this.sprite = passed['img'];
+    this.sprites = [0,0,0,0];
     this.spritex = 0;
     this.spritey = 0;
     this.spritewidth = 400;
     this.spriteheight = 400;
     this.actorwidth = passed['width'];
     this.actorheight = passed['height'];
-    this.xpos = canvas.width / 2;
-    this.ypos = canvas.height / 2;
+    this.xpos = 0; //canvas.width / 2;
+    this.ypos = 0; //canvas.height / 2;
 
     this.vehcount = passed['vehcount'];
     this.routes = passed['routes'];
-    this.junction = passed['junction'];
+    this.junction;
     this.priority = passed['priority'];
 
     this.directionstacks = [[],[],[],[]];
 
     this.draw = function(){
-        thecyclist.general.drawOnCanvas(this);
+        for(i = 0; i < this.sprites.length; i++){
+            if(this.sprites[i]){
+                thecyclist.general.drawOnCanvas(this,this.sprites[i]);
+            }
+        }
         //canvas_cxt.drawImage(this.sprite, 0,0);
         //canvas_cxt.drawImage(this.sprite, this.spritex, this.spritey, this.spritewidth, this.spriteheight, this.xpos, this.ypos, this.actorwidth, this.actorheight);
     };
@@ -120,7 +124,7 @@ function createVehicle(passed){
     };
 
     this.draw = function(){
-        thecyclist.general.drawOnCanvas(this);
+        thecyclist.general.drawObjectOnCanvas(this);
     };
 
     this.checkToMove = function(){
@@ -303,8 +307,12 @@ var thecyclist = {
             canvas_cxt.textAlign = "center";
             game = 0;
         },
+        //draw on the canvas
+        drawOnCanvas: function(obj,sprite){
+            canvas_cxt.drawImage(sprite, obj.spritex, obj.spritey, obj.spritewidth, obj.spriteheight, obj.xpos, obj.ypos, obj.actorwidth, obj.actorheight);
+        },
         //draw some object on the canvas
-        drawOnCanvas: function(obj){
+        drawObjectOnCanvas: function(obj){
             var xpos = obj.xpos - (obj.actorwidth / 2);
             var ypos = obj.ypos - (obj.actorheight / 2);
             canvas_cxt.drawImage(obj.sprite, obj.spritex, obj.spritey, obj.spritewidth, obj.spriteheight, xpos, ypos, obj.actorwidth, obj.actorheight);
@@ -330,7 +338,20 @@ var thecyclist = {
         //initialise data for the level object
         setupLevel: function(){
             var data = roaddata(canvas);
-            level = new createLevel(data[0]);
+            data = data[0];
+            level = new createLevel(data);
+            
+            for(i = 0; i < data['routes'].length; i++){
+                if(data['routes'][i]){
+                    level.sprites[i] = roadimages[i];
+                }
+            }
+
+            if(data['junction']){
+                console.log('junction');
+                switch(data['junction']){
+                }
+            }
         },
         //initialise data for the vehicles
         setupVehicles: function(){
@@ -339,7 +360,7 @@ var thecyclist = {
             var vehid = 1;
             var spacing = 30;
 
-            var berandom = 0;
+            var berandom = 1;
             var vehiclecount,routecount = 0;
             vehiclecounts = [0,0,0,0];
             for(i = 0; i < level.routes.length; i++){ //count the number of routes
@@ -393,7 +414,7 @@ var thecyclist = {
                 [boundary_s, boundary_s * 1.5, canvas.height - (boundary_s * 1.5), canvas.height - boundary_s], //south
                 [boundary_w, boundary_w * 1.5, canvas.height - (boundary_w * 1.5), canvas.width - boundary_w], //west
             ];
-            console.log(directors_areas);
+            //console.log(directors_areas);
 
             var directors = [boundary_n,boundary_e,boundary_s,boundary_w]; //these are the positions we start placing vehicles from, then increment
 
@@ -415,7 +436,6 @@ var thecyclist = {
                     var tmppos;
 
                     //fixme argh we're redefining this in every loop
-                    //width/height, second width/height, spacing, width/height for spacing,
                     var directionvariables = [
                         [spacing, vehtmp.actorheight, canvas.height + vehtmp.actorheight], //n
                         [spacing, vehtmp.actorwidth,  0 - (vehtmp.actorwidth * 2)], //e
@@ -459,7 +479,7 @@ var thecyclist = {
                     allObjects.push(vehtmp);
                 }
             }
-
+            /*
             // bit of debug stuff here
             directioncount = [0,0,0,0];
             for(i = 0; i < allObjects.length; i++){
@@ -473,7 +493,7 @@ var thecyclist = {
             console.log(level.directionstacks[1].length + " cars in east stack");
             console.log(level.directionstacks[2].length + " cars in south stack");
             console.log(level.directionstacks[3].length + " cars in west stack");
-
+            */
 
         }
     },

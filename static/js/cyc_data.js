@@ -1,6 +1,6 @@
 //load images
 var roadimgdir = 'roads/';
-var roadimages = ['dual-straight.png','dual-left.png','dual-left-tosingle.png','dual-right.png','dual-right-tosingle.png','dual-crossroads.png'];
+var roadimages = ['route_n.png','route_e.png','route_s.png','route_w.png'];
 
 var pedimgdir = 'peds/';
 var pedimages = ['ped1.png'];
@@ -56,12 +56,11 @@ function roaddata(canvas){
     return([
         {
             'type': 'Dual lane, straight on', //currently unused
-            'img': roadimages[5], //fixme should be determined programmatically
             'width': canvas.width,
             'height': canvas.height,
-            'vehcount': 30,
+            'vehcount': 20,
             'routes': [1,1,1,1], //determines which directions have traffic allowed in them, n,e,s,w
-            'junction': 0, //fixme needs implementing. Possible values: 1 - traffic lights, 2 - traffic lights with cycle boxes
+            'junction': 1, //fixme needs implementing. Possible values: 1 - traffic lights, 2 - traffic lights with cycle boxes
             'priority': [0,1,0,1], //determines which of the directions has priority and therefore can have traffic in the centre, assuming no junction, n,e,s,w. THIS REQUIRES COMMON SENSE to configure
         }
     ]);
