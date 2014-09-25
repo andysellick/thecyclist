@@ -6,6 +6,7 @@ var gameloop;
 
 var player;
 var level;
+var junction;
 var allObjects = [];
 
 // Returns a random number between min (inclusive) and max (exclusive)
@@ -32,7 +33,7 @@ function createPlayer(){
 
 //object for the level
 function createLevel(passed){
-    this.sprites = [0,0,0,0];
+    this.sprites = [0,0,0,0,0,0,0,0];
     this.spritex = 0;
     this.spritey = 0;
     this.spritewidth = 400;
@@ -90,6 +91,38 @@ function createLevel(passed){
     };
 }
 
+//object for the junction
+function createJunction(){
+    this.sprite;
+    this.spritex = 0;
+    this.spritey = 0;
+    this.spritewidth = 200;
+    this.spriteheight = 200;
+    this.lights = [1,0,1,0]; //n,e,s,w. If 1, indicates the light in that direction is red
+    this.boundaries = [0,0,0,0]; //used for collision detection
+    this.actorwidth;
+    this.actorheight;
+    this.xpos;
+    this.ypos;
+
+    this.draw = function(){
+        thecyclist.general.drawOnCanvas(this,this.sprite);
+    }
+
+    this.changeLights = function(direction){
+        this.lights = [0,0,0,0]; //turn off all lights
+        //assuming we're passing a 1 or a 0 to represent the change
+        this.lights[direction] = 1;
+        this.lights[direction + 2] = 1;
+        if(direction){
+            console.log('lights are now east west');
+        }
+        else {
+            console.log('lights are now north south');
+        }
+    }
+}
+
 //object for a vehicle
 function createVehicle(passed){
     this.type = passed['type'];
@@ -102,11 +135,6 @@ function createVehicle(passed){
     this.actorheight = passed['height'];
     this.xpos = 0;
     this.ypos = 0;
-    
-    this.collisionZoneX;
-    this.collisionZoneY;
-    this.collisionZoneW;
-    this.collisionZoneH;
 
     this.id = 0;
     this.active = 1;
@@ -132,7 +160,7 @@ function createVehicle(passed){
         offset = 15;
         hasCollision = 0;
         
-        //if car in front, slow down
+        //check collisions for other cars
         for(z = 0; z < allObjects.length; z++){
             if(allObjects[z].active){
                 if(this.id != allObjects[z].id){
@@ -142,6 +170,32 @@ function createVehicle(passed){
                 }
             }
         }
+        //check collisions for junction
+        if(junction.lights[this.direction]){
+            switch(this.direction){
+                case 0: //north
+                    if(this.ypos > junction.boundaries[this.direction][0] && this.ypos < junction.boundaries[this.direction][1]){
+                        hasCollision = 1;
+                    }
+                    break;
+                case 1: //east
+                    if(this.xpos < junction.boundaries[this.direction][0] && this.xpos > junction.boundaries[this.direction][1]){
+                        hasCollision = 1;
+                    }
+                    break;
+                case 2: //south
+                    if(this.ypos < junction.boundaries[this.direction][0] && this.ypos > junction.boundaries[this.direction][1]){
+                        hasCollision = 1;
+                    }
+                    break;
+                case 3: //west
+                    if(this.xpos > junction.boundaries[this.direction][0] && this.xpos < junction.boundaries[this.direction][1]){
+                        hasCollision = 1;
+                    }
+                    break;
+            }
+        }
+
         if(hasCollision){
             //this.moveby = 0;
             this.moveby = Math.max(this.moveby - this.braking, 0);
@@ -341,17 +395,27 @@ var thecyclist = {
             data = data[0];
             level = new createLevel(data);
             
-            for(i = 0; i < data['routes'].length; i++){
-                if(data['routes'][i]){
+            for(i = 0; i < data['roads'].length; i++){
+                if(data['roads'][i]){
                     level.sprites[i] = roadimages[i];
                 }
             }
-
-            if(data['junction']){
-                console.log('junction');
-                switch(data['junction']){
-                }
-            }
+            
+            //create and configure the junction
+            junction = new createJunction();
+            //fixme might do something more configurable for size and position in future
+            junction.actorwidth = canvas.width / 2;
+            junction.actorheight = canvas.height / 2;
+            junction.xpos = canvas.width / 4;
+            junction.ypos = canvas.width / 4;
+            junction.sprite = roadimages[8];
+            
+            //this is going to get ugly fixme
+            var boundary = 20;
+            junction.boundaries[0] = [junction.ypos + junction.actorheight, junction.ypos + junction.actorheight + boundary]; //north
+            junction.boundaries[1] = [junction.xpos, junction.xpos - boundary]; //east
+            junction.boundaries[2] = [junction.ypos, junction.ypos - boundary]; //south
+            junction.boundaries[3] = [junction.xpos + junction.actorwidth, junction.xpos + junction.actorwidth + boundary]; //west
         },
         //initialise data for the vehicles
         setupVehicles: function(){
@@ -360,7 +424,6 @@ var thecyclist = {
             var vehid = 1;
             var spacing = 30;
 
-            var berandom = 1;
             var vehiclecount,routecount = 0;
             vehiclecounts = [0,0,0,0];
             for(i = 0; i < level.routes.length; i++){ //count the number of routes
@@ -369,7 +432,7 @@ var thecyclist = {
             }
 
             //fixme this all seems too complicated. Isn't there a simpler way?
-            if(!berandom){ //evenly spread the total vehicles between the available routes
+            if(!level.randomdist){ //evenly spread the total vehicles between the available routes
                 vehiclecount = Math.floor(level.vehcount / routecount); //divide the number of cars by the number of routes
                 for(i = 0; i < level.routes.length; i++){ //add that number to each available route
                     if(level.routes[i])
@@ -502,6 +565,7 @@ var thecyclist = {
             if(game){
                 thecyclist.general.clearCanvas(canvas,canvas_cxt); //clear canvas
                 level.draw(); //draw level
+                junction.draw(); //draw junction
                 for(i = 0; i < allObjects.length; i++){ //draw vehicles
                     allObjects[i].runActions();
                 }
@@ -540,5 +604,16 @@ window.onload = function(){
         thecyclist.general.initGame();
         thecyclist.game.gameLoop();
     }
+    
+    $('body').on('keyup',function(e){
+        if(e.keyCode == 49){ //1
+            junction.changeLights(0);
+            console.log('changing lights');
+        }
+        if(e.keyCode == 50){ //2
+            junction.changeLights(1);
+            console.log('changing lights');
+        }
+    });
 
 };

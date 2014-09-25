@@ -1,6 +1,6 @@
 //load images
 var roadimgdir = 'roads/';
-var roadimages = ['route_n.png','route_e.png','route_s.png','route_w.png'];
+var roadimages = ['route-n-1.png','route-n-2.png','route-e-1.png','route-e-2.png','route-s-1.png','route-s-2.png','route-w-1.png','route-w-2.png','junction-1.png'];
 
 var pedimgdir = 'peds/';
 var pedimages = ['ped1.png'];
@@ -48,20 +48,17 @@ function preloadImages(array,dir){
 
 //function to return all the road information
 function roaddata(canvas){
-    //route-x attributes determine what kind of road goes in that direction
-    //e.g. route-n 2 means a dual lane road goes north
-    
-    //routes shows the availability of directions of travel for nesw
-    //e.g. [2,0,2,1] is a two lane road going north and south and a single lane going west
     return([
         {
-            'type': 'Dual lane, straight on', //currently unused
+            'type': '', //currently unused
             'width': canvas.width,
             'height': canvas.height,
             'vehcount': 20,
-            'routes': [1,1,1,1], //determines which directions have traffic allowed in them, n,e,s,w
+            'randomdist': 0, //determines whether the number of cars is randomly distributed between the available routes or not
+            'routes': [1,1,1,1], //determines which directions have traffic allowed in them, n,e,s,w.
+            'roads': [1,1,1,1,1,1,1,1], //determines which directions have roads shown. Each direction has a pair of possible roads. THIS REQUIRES COMMON SENSE to configure
             'junction': 1, //fixme needs implementing. Possible values: 1 - traffic lights, 2 - traffic lights with cycle boxes
-            'priority': [0,1,0,1], //determines which of the directions has priority and therefore can have traffic in the centre, assuming no junction, n,e,s,w. THIS REQUIRES COMMON SENSE to configure
+            'priority': [0,0,0,0], //determines which of the directions has priority and therefore can have traffic in the centre at the start, assuming no junction, THIS REQUIRES COMMON SENSE to configure
         }
     ]);
 }
@@ -73,7 +70,7 @@ function vehicledata(canvas){
     return([
         {
             'type': 'car',
-            'img': vehimages[0],
+            //'img': vehimages[0], //currently unused
             'width': vwidth,
             'height': vheight,
         }
