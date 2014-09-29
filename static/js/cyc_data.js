@@ -58,7 +58,7 @@ function roaddata(canvas){
             'routes': [1,1,1,1], //determines which directions have traffic allowed in them, n,e,s,w.
             'roads': [1,1,1,1,1,1,1,1], //determines which directions have roads shown. Each direction has a pair of possible roads. THIS REQUIRES COMMON SENSE to configure
             'junction': 1, //fixme needs implementing. Possible values: 1 - traffic lights, 2 - traffic lights with cycle boxes
-            'priority': [0,0,0,0], //determines which of the directions has priority and therefore can have traffic in the centre at the start, assuming no junction, THIS REQUIRES COMMON SENSE to configure
+            'priority': [0,0,0,0], //determines which of the directions has priority and therefore can have traffic in the centre at the start, THIS REQUIRES COMMON SENSE to configure
         }
     ]);
 }

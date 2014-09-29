@@ -98,7 +98,11 @@ function createJunction(){
     this.spritey = 0;
     this.spritewidth = 200;
     this.spriteheight = 200;
+
     this.lights = [1,0,1,0]; //n,e,s,w. If 1, indicates the light in that direction is red
+    this.lightswitch = 0; //initial value is important
+    this.lightlock = 0;
+
     this.boundaries = [0,0,0,0]; //used for collision detection
     this.actorwidth;
     this.actorheight;
@@ -107,20 +111,27 @@ function createJunction(){
 
     this.draw = function(){
         thecyclist.general.drawOnCanvas(this,this.sprite);
-    }
+    };
 
-    this.changeLights = function(direction){
-        this.lights = [0,0,0,0]; //turn off all lights
-        //assuming we're passing a 1 or a 0 to represent the change
-        this.lights[direction] = 1;
-        this.lights[direction + 2] = 1;
-        if(direction){
-            console.log('lights are now east west');
+    //initialise the changing of the lights
+    this.changeLights = function(){ //assuming we're passing a 1 or a 0 to represent the change
+        if(!this.lightlock){
+            //console.log('all lights red, changing to %d',direction);
+            this.lightlock = 1;
+            this.lights = [1,1,1,1]; //turn off all lights
+            var _this = this;
+            setTimeout(function(){ _this.activateLights(); }, 5000);
         }
-        else {
-            console.log('lights are now north south');
-        }
-    }
+    };
+
+    //actually change the lights, called on a timeout to allow traffic to clear
+    this.activateLights = function(){
+        this.lights[this.lightswitch] = 0;
+        this.lights[this.lightswitch + 2] = 0;
+        console.log('lights are now ' + this.lights);
+        this.lightswitch ^= 1; //switch value between 1 and 0
+        this.lightlock = 0;
+    };
 }
 
 //object for a vehicle
@@ -470,12 +481,13 @@ var thecyclist = {
 
             //used to place vehicles without overlapping them
             //essentially here we're defining a square ring around the screen within which vehicles can be placed depending on the level configuration
+            //in order to prevent vehicles being placed too near the edge and/or in the middle of the junction where they could overlap
             //if the level has a junction in the middle fixme
             var directors_areas = [
-                [boundary_n, boundary_n * 1.5, canvas.height - (boundary_n * 1.5), canvas.height - boundary_n], //north
-                [boundary_e, boundary_e * 1.5, canvas.height - (boundary_e * 1.5), canvas.width - boundary_e], //east
-                [boundary_s, boundary_s * 1.5, canvas.height - (boundary_s * 1.5), canvas.height - boundary_s], //south
-                [boundary_w, boundary_w * 1.5, canvas.height - (boundary_w * 1.5), canvas.width - boundary_w], //west
+                [boundary_n, boundary_n * 1.2, canvas.height - (boundary_n * 1.2), canvas.height - boundary_n], //north
+                [boundary_e, boundary_e * 1.2, canvas.height - (boundary_e * 1.2), canvas.width - boundary_e], //east
+                [boundary_s, boundary_s * 1.2, canvas.height - (boundary_s * 1.2), canvas.height - boundary_s], //south
+                [boundary_w, boundary_w * 1.2, canvas.height - (boundary_w * 1.2), canvas.width - boundary_w], //west
             ];
             //console.log(directors_areas);
 
@@ -607,13 +619,13 @@ window.onload = function(){
     
     $('body').on('keyup',function(e){
         if(e.keyCode == 49){ //1
-            junction.changeLights(0);
-            console.log('changing lights');
+            junction.changeLights();
         }
+        /*
         if(e.keyCode == 50){ //2
             junction.changeLights(1);
-            console.log('changing lights');
         }
+        */
     });
 
 };
