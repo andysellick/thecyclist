@@ -343,8 +343,10 @@ var thecyclist = {
             var cheight = Math.min(destheight, $(window).height());
 
             //resize the canvas to maintain aspect ratio depending on screen size
-            canvas.width = Math.min($(window).width(),aspect) - 2; //shaving a bit off here to avoid a bit of vertical overlap
-            canvas.height = (canvas.width / destwidth) * destheight - 2;
+            //slightly complicated now as we're making it minimum 320x320, maximum 600x600
+            //fixme there's probably a simpler way of doing this
+            canvas.width = Math.min(destwidth,Math.max(320,Math.min($(window).width(),aspect) - 2)); //shaving a bit off here to avoid a bit of vertical overlap
+            canvas.height = Math.min(destheight,Math.max(320,(canvas.width / destwidth) * destheight - 2));
         },
         //initialise the canvas and return the canvas context
         initCanvas: function(canvas, cxt){
