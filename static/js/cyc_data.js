@@ -16,22 +16,24 @@ callAllImages(vehimages,vehimgdir);
 
 function callAllImages(array,dir){
     for(i = 0; i < array.length; i++){
-        loaders.push(loadSprite('static/img/' + dir + array[i]));
+        loaders.push(loadSprite('static/img/' + dir + array[i], array, i));
     }
 }
 
 //preload sprites
-function loadSprite(src) {
+function loadSprite(src,array,num) {
     var deferred = $.Deferred();
     var sprite = new Image();
     sprite.onload = function() {
         deferred.resolve();
+        array[num] = sprite;
     };
     sprite.src = src;
     return deferred.promise();
 }
 
 //preload images
+/*
 function preloadImages(array,dir){
     var imagedir = 'static/img/' + dir;
     var tempimg;
@@ -42,6 +44,7 @@ function preloadImages(array,dir){
     }
     return(array);
 }
+*/
 
 //FIXME split out road graphics into layers - tarmac, road markings, cycle boxes, lights
 

@@ -600,9 +600,9 @@ window.thecyclist = thecyclist;
 window.onload = function(){
     //when images loaded, proceed with rest
     $.when.apply(null, loaders).done(function() {
-        roadimages = preloadImages(roadimages,roadimgdir);
-        pedimages = preloadImages(pedimages,pedimgdir);
-        vehimages = preloadImages(vehimages,vehimgdir);
+        //roadimages = preloadImages(roadimages,roadimgdir);
+        //pedimages = preloadImages(pedimages,pedimgdir);
+        //vehimages = preloadImages(vehimages,vehimgdir);
         thecyclist.general.initialise();
     });
 
